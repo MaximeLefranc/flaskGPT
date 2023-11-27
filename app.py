@@ -2,7 +2,7 @@ import os
 from typing import Generator, Sequence
 from pprint import pprint
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, Response
 import openai
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 from dotenv import load_dotenv
@@ -19,6 +19,14 @@ app = Flask(__name__)
 @app.route('/')
 def home():
     return render_template('index.html')
+
+
+@app.route('/prompt', methods=['POST'])
+def prompt():
+    messages = request.get_json().get('messages')
+    conversation = build_conversation_dict(messages)
+
+    return Response(event_stream(conversation), mimetype='text/event-stream')
 
 
 def build_conversation_dict(messages: list):

@@ -20,3 +20,29 @@ const getChatHistory = () => {
   );
   return Array.from(messageBlocks).map((element) => element.innerHTML);
 };
+
+const fetchPromptResponse = async () => {
+  const response = await fetch('/prompt', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messages: getChatHistory(),
+    }),
+  });
+
+  return response.body.getReader();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.querySelector('#prompt-form');
+  const spinnerIcon = document.querySelector('#spinner-icon');
+  const sendIcon = document.querySelector('#send-icon');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    spinnerIcon.classList.remove('hidden');
+    sendIcon.classList.add('hidden');
+  });
+});
