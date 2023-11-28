@@ -35,6 +35,21 @@ const fetchPromptResponse = async () => {
   return response.body.getReader();
 };
 
+const readResponseChunks = async (reader, answerBlock) => {
+  const decoder = new TextDecoder();
+  const converter = new showdown.Converter();
+
+  let chunks = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    chunks += decoder.decode(value);
+    answerBlock.innerHTML = converter.makeHtml(chunks);
+  }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('#prompt-form');
   const spinnerIcon = document.querySelector('#spinner-icon');
@@ -44,5 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
     event.preventDefault();
     spinnerIcon.classList.remove('hidden');
     sendIcon.classList.add('hidden');
+
+    const prompt = form.elements.prompt.value;
+    form.elements.prompt.value = '';
+    addtoLog(prompt);
+
+    try {
+      const answerBlock = addtoLog('GPT est en train de réfléchir ...');
+      const reader = await fetchPromptResponse();
+      await readResponseChunks(reader, answerBlock);
+    } catch (e) {
+      console.error('One error has ocurred :', e);
+    } finally {
+      spinnerIcon.classList.add('hidden');
+      sendIcon.classList.remove('hidden');
+      hljs.highlightAll();
+    }
   });
 });
